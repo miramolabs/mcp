@@ -1,4 +1,11 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/miramo-logo-cream.svg">
+  <img alt="Miramo" src="assets/miramo-logo-green.svg" width="220">
+</picture>
+
 # Miramo MCP server
+
+**En français** : [documentation du serveur sur miramo.fr](https://www.miramo.fr/outils/mcp/developpeurs)
 
 French rental law for tenants and landlords: rent caps, rental zones and unfurnished lease drafts.
 

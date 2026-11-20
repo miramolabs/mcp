@@ -1,7 +1,7 @@
 {
   "name": "miramo",
-  "version": "0.1.1",
-  "description": "French rental law for tenants and landlords: rent caps, rental zones and unfurnished lease drafts.",
+  "version": "0.2.0",
+  "description": "French rental law and calculators for tenants and landlords: rent caps, notices, deposits, leases.",
   "mcpServers": {
     "miramo": {
       "httpUrl": "https://mcp.miramo.fr/mcp"

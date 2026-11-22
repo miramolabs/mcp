@@ -9,7 +9,7 @@
 
 French rental law and calculators for tenants and landlords: rent caps, notices, deposits, leases.
 
-Miramo is a hosted, read-only MCP server. It answers rental questions in France from the official texts: the prefectoral orders that cap rents, the official lists of tense and ABC zones, the airport noise maps of the French civil aviation authority, the official lease model, the 1989 rental law, the civil and tax codes, and the Banque de France average loan rate. It also finds the articles of Miramo's blog that answer a question. It is free, needs no account or API key, and has nothing to install: you add one address to your agent.
+Miramo is a hosted, read-only MCP server. It answers rental questions in France from the official texts: the prefectoral orders that cap rents, the official lists of tense and ABC zones, the airport noise maps of the French civil aviation authority, the official lease model, the 1989 rental law, the decency decree and its energy performance calendar, the civil and tax codes, Action Logement's Visale rules, and the Banque de France average loan rate. It also finds the articles of Miramo's blog that answer a question. It is free, needs no account or API key, and has nothing to install: you add one address to your agent.
 
 ```
 https://mcp.miramo.fr/mcp
@@ -23,10 +23,12 @@ Transport: Streamable HTTP. Authentication: none.
 - **Rent control**: whether rents are capped at an address (Paris, Lyon, Lille, Bordeaux, Montpellier, Grenoble, the Basque Country, Plaine Commune, Est Ensemble), in the whole town or in part.
 - **Tense zone**: a town's category and what it changes: the tenant's notice, the rent rise between two tenants, the vacancy tax.
 - **ABC zone**: a town's zone and what it changes for the investment schemes: Loc'Avantages and its rent ceilings, intermediate housing, the zero-rate loan.
+- **Energy performance**: from when a dwelling of a given DPE class no longer reaches the energy performance of a decent dwelling, in mainland France and the overseas departments.
+- **Living area**: the living area of a dwelling room by room, its Carrez area in a co-ownership, and the gap with the area stated in the lease.
 - **Airport noise zone**: whether an address sits in an airport's noise exposure plan, and so whether a noise report goes with the lease.
 - **Lease draft**: a link to Miramo's lease generator (unfurnished, furnished or mobility lease), filled in with the dwelling, the rent and the dates given. Nothing is stored: the draft travels in the link.
-- **Notice and deposit**: the notice of a tenant or a landlord, the deposit cap, the deadline and penalty to give it back, the wear and tear deducted, the documents to join to a lease.
-- **Rent and charges**: the rent of an incomplete month, the rent an income allows, the rent revision freeze of F and G dwellings, the recoverable charges, the yearly regularization, the waste collection tax.
+- **Notice and deposit**: the notice of a tenant or a landlord, the deposit cap, the deadline and penalty to give it back, the wear and tear deducted, the documents to join to a lease, whether an applicant can get Visale or a rent-guarantee insurance.
+- **Rent and charges**: the highest rent between two tenants, the rent of an incomplete month, the rent an income allows, the rent revision freeze of F and G dwellings, the recoverable charges, the yearly regularization, the waste collection tax.
 - **Investing and managing**: rental yield, micro-foncier or réel, loan payments, borrowing capacity, self-management or an agency.
 - **Blog**: the articles of Miramo's blog that answer a question, with their publication day.
 
@@ -34,16 +36,17 @@ Every answer gives its source, the date it came into force and its end date when
 
 ## Tools
 
-All 23 tools are read-only. Their texts are in French, and each answer also comes as structured content.
+All 27 tools are read-only. Their texts are in French, and each answer also comes as structured content.
 
 ### Rent
 
 | Tool | Input | Output |
 | --- | --- | --- |
 | `lookup_reference_rent` | `address`, `rooms`, `furnished`, `constructionPeriod`, `surface` | The reference rent, its upper and lower limits, the monthly cap, the order in force and its dates. |
-| `check_rent_control_perimeter` | `address`, `commune`, `inseeCode` | Whether rents are capped there (`full`, `partial`, `none`), the territory and its order. |
+| `check_rent_control_perimeter` | `address`, `commune`, `inseeCode` | Whether rents are capped there (`full`, `partial`, `none`), the territory and its order, or `not_settled` where Miramo does not settle it. |
 | `calculate_prorated_rent` | `move`, `leaseType`, `monthlyRent`, `monthlyCharges`, `leaseStartDate`, `paymentTerm`, `exitReason`, `noticeEndDate`, `relocationMoveInDate`, `keyHandoverDate`, `leaseEndDate` | The rent and charges owed for the incomplete month of a move in or out. |
 | `check_rent_revision_freeze` | `dpeClass`, `leaseType`, `leaseEffectiveDate`, `address`, `commune`, `inseeCode` | Whether the rent of a dwelling rated F or G can still be revised, and since when. |
+| `calculate_reletting_rent_cap` | `leaseType`, `address`, `commune`, `inseeCode`, `dpeClass`, `hasTenantLeftWithin18Months`, `previousRent`, `previousRentLastRevisedOn`, `plannedRent`, `works`, `plannedSignatureOn` | The highest rent of a new lease when the dwelling changes tenant, the reason when there is no cap, and the excess of a planned rent. |
 | `calculate_affordable_rent` | `householdMonthlyNetIncome`, `plannedRentIncludingCharges`, `incomeMultiplier` | The highest rent an income allows and the effort rate of a planned rent. |
 
 ### Lease, notice and deposit
@@ -51,9 +54,10 @@ All 23 tools are read-only. Their texts are in French, and each answer also come
 | Tool | Input | Output |
 | --- | --- | --- |
 | `prepare_lease_draft` | `leaseType`, `annexes`, `dates`, `rent`, `property` | A link to the lease generator on miramo.fr (unfurnished, furnished or mobility lease), filled in with the draft. |
-| `calculate_notice_period` | `party`, `leaseType`, `hasReducedNoticeReason`, `address`, `commune`, `inseeCode`, `receptionDate` | The notice of a tenant or a landlord on the three leases, and its end date for a tenant. |
+| `calculate_notice_period` | `party`, `leaseType`, `hasReducedNoticeReason`, `address`, `commune`, `inseeCode`, `receptionDate` | The notice of a tenant or a landlord on the three leases, and its end date for a tenant, or `not_settled` where Miramo does not settle it. |
 | `calculate_deposit_return` | `leaseType`, `keyHandoverDate`, `exitInventory`, `monthlyRentExcludingCharges`, `depositPaid`, `hasLandlordNewAddress`, `justifiedRetentions`, `isCollectiveBuilding`, `condominiumProvision`, `asOfDate` | The deadline to give the deposit back, the sum due and the late penalty. |
 | `calculate_wear_and_tear` | `items`, `depositPaid` | The tenant's share of each damage once wear and tear is deducted, and the deposit balance. |
+| `check_rent_guarantee_eligibility` | `address`, `commune`, `inseeCode`, `rentIncludingCharges`, `leaseType`, `applicants`, `gliIncomeMultiplier` | Whether one or two applicants can get Visale or a rent-guarantee insurance, with the reason for each. |
 | `list_required_lease_annexes` | `leaseType`, `isBuiltBefore1949`, `isInCoOwnership`, `isGasInstallationOver15Years`, `isElectricalInstallationOver15Years`, `isInRiskZone`, `isInAirportNoiseZone` | The diagnostics and documents to join to the lease, each with its reason. |
 | `calculate_deposit_cap` | `leaseType`, `monthlyRentExcludingCharges`, `isRentPaidInAdvanceOverTwoMonths`, `requestedDeposit` | The highest deposit a landlord may ask, and the excess of a deposit asked. |
 
@@ -61,9 +65,11 @@ All 23 tools are read-only. Their texts are in French, and each answer also come
 
 | Tool | Input | Output |
 | --- | --- | --- |
-| `check_tense_zone` | `address`, `commune`, `inseeCode` | The category (`1`, `2`, `none`) and its effects, with the official list and its last update. |
+| `check_dpe_rental_ban` | `dpeClass`, `address`, `commune`, `inseeCode` | The day a dwelling of that DPE class no longer reaches the energy performance of a decent dwelling, and whether that day has passed. |
+| `check_tense_zone` | `address`, `commune`, `inseeCode` | The category (`1`, `2`, `none`) and its effects, with the official list and its last update, or `not_settled` where Miramo does not settle it. |
 | `check_airport_noise_zone` | `address` | The noise zone (`A` to `D`), the airport and its plan, and whether a noise report is required. |
 | `check_abc_zone` | `address`, `commune`, `inseeCode` | The zone (`Abis`, `A`, `B1`, `B2`, `C`), the schemes it opens and the Loc'Avantages ceilings. |
+| `calculate_living_area` | `isInCoproperty`, `hasDecentSizeMainRoom`, `rooms`, `lease` | The living area room by room, the Carrez area in a co-ownership, and the gap with the area stated in the lease. |
 
 ### Charges
 
@@ -89,7 +95,7 @@ All 23 tools are read-only. Their texts are in French, and each answer also come
 | --- | --- | --- |
 | `search_blog_articles` | `query` | Up to ten articles of Miramo's blog on the question, with their publication day and link. |
 
-19 prompts, for the agents that list them as shortcuts, each writing a question for one tool:
+23 prompts, for the agents that list them as shortcuts, each writing a question for one tool:
 
 - `prepare_lease` (Préparer un bail)
 - `calculate_waste_tax_share` (Calculer la taxe des ordures)
@@ -100,11 +106,15 @@ All 23 tools are read-only. Their texts are in French, and each answer also come
 - `calculate_rental_yield` (Calculer la rentabilité d'un achat)
 - `calculate_charges_regularization` (Régulariser les charges)
 - `list_required_lease_annexes` (Lister les annexes du bail)
+- `calculate_reletting_rent_cap` (Calculer le loyer du nouveau locataire)
 - `check_rent_revision_freeze` (Vérifier le gel du loyer (DPE F ou G))
 - `calculate_prorated_rent` (Calculer le loyer d'un mois incomplet)
 - `calculate_affordable_rent` (Calculer le loyer selon ses revenus)
 - `calculate_deposit_cap` (Calculer le dépôt maximum)
 - `calculate_deposit_return` (Calculer le délai pour rendre le dépôt)
+- `calculate_living_area` (Calculer une surface habitable)
+- `check_dpe_rental_ban` (Vérifier si le DPE interdit la location)
+- `check_rent_guarantee_eligibility` (Vérifier un dossier pour Visale ou GLI)
 - `calculate_loan_payment` (Calculer les mensualités d'un prêt)
 - `calculate_borrowing_capacity` (Calculer sa capacité d'emprunt)
 - `compare_property_income_tax_regimes` (Comparer micro-foncier et réel)
@@ -177,6 +187,7 @@ Add a remote MCP server at `https://mcp.miramo.fr/mcp`, over Streamable HTTP, wi
 ## Limits
 
 - France only. Where rents are capped but Miramo holds no official rent table (Grenoble, the Basque Country), the server names the order and gives no figure. For Lille, Bordeaux and Montpellier, `isStale` flags a rent table older than the order in force.
+- In the French overseas collectivities other than Guadeloupe, Martinique, French Guiana, La Réunion and Mayotte, the tense zone, rent control perimeter and notice tools answer `not_settled`: Miramo has not checked the rules that apply there.
 - It gives general information from the official texts, not legal advice.
 - The lease tool prepares a draft and nothing more, and every calculation is an estimate from the figures given: the server signs nothing, sends nothing and touches no account.
 - Up to 60 tool calls a minute per IP address. Past that, the server answers `429` with `Retry-After`.

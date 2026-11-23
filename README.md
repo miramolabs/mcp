@@ -29,6 +29,12 @@ Transport: Streamable HTTP. Authentication: none.
 - **Lease draft**: a link to Miramo's lease generator (unfurnished, furnished or mobility lease), filled in with the dwelling, the rent and the dates given. Nothing is stored: the draft travels in the link.
 - **Notice and deposit**: the notice of a tenant or a landlord, the deposit cap, the deadline and penalty to give it back, the wear and tear deducted, the documents to join to a lease, whether an applicant can get Visale or a rent-guarantee insurance.
 - **Rent and charges**: the highest rent between two tenants, the rent of an incomplete month, the rent an income allows, the rent revision freeze of F and G dwellings, the recoverable charges, the yearly regularization, the waste collection tax.
+- **Rent index and revision**: the rent reference index (IRL) of a quarter, and how much a rent may rise at its yearly revision.
+- **Advertised rent**: the estimated advertised rent of a typical dwelling in a town.
+- **Housing benefit**: an estimate of the monthly housing benefit (APL, ALS or ALF) for a rent and a household, computed with OpenFisca on Miramo's own server.
+- **Tenant file**: the documents a landlord may ask an applicant and a guarantor for, from the decree's list.
+- **The address**: the urban plan zone at an address, whether it sits in a principal residence sector, the housing contacts of the town and its département, the local tax rates of the town.
+- **DPE lookup**: what ADEME publishes under a DPE number.
 - **Investing and managing**: rental yield, micro-foncier or réel, loan payments, borrowing capacity, self-management or an agency.
 - **Blog**: the articles of Miramo's blog that answer a question, with their publication day.
 
@@ -36,7 +42,7 @@ Every answer gives its source, the date it came into force and its end date when
 
 ## Tools
 
-All 27 tools are read-only. Their texts are in French, and each answer also comes as structured content.
+All 37 tools are read-only. Their texts are in French, and each answer also comes as structured content.
 
 ### Rent
 
@@ -48,6 +54,10 @@ All 27 tools are read-only. Their texts are in French, and each answer also come
 | `check_rent_revision_freeze` | `dpeClass`, `leaseType`, `leaseEffectiveDate`, `address`, `commune`, `inseeCode` | Whether the rent of a dwelling rated F or G can still be revised, and since when. |
 | `calculate_reletting_rent_cap` | `leaseType`, `address`, `commune`, `inseeCode`, `dpeClass`, `hasTenantLeftWithin18Months`, `previousRent`, `previousRentLastRevisedOn`, `plannedRent`, `works`, `plannedSignatureOn` | The highest rent of a new lease when the dwelling changes tenant, the reason when there is no cap, and the excess of a planned rent. |
 | `calculate_affordable_rent` | `householdMonthlyNetIncome`, `plannedRentIncludingCharges`, `incomeMultiplier` | The highest rent an income allows and the effort rate of a planned rent. |
+| `lookup_irl` | `year`, `quarter` | The rent reference index of a quarter, or the last one published, for mainland France, Corsica and the overseas départements. |
+| `calculate_rent_revision` | `leaseType`, `hasRevisionClause`, `monthlyRentExcludingCharges`, `leaseSignedOn`, `revisionDate`, `address`, `commune`, `inseeCode`, `referenceQuarter`, `landlordRequestDate`, `dpeClass`, `leaseEffectiveDate`, `housingRegime` | The revised rent, the index pair used, and the reason when the rent may not rise. |
+| `lookup_advertised_rent` | `address`, `commune`, `inseeCode` | The estimated advertised rent per m² of a typical dwelling in the town, from the State's rent map. |
+| `calculate_housing_benefit` | `address`, `commune`, `inseeCode`, `monthlyRent`, `isCouple`, `incomes`, `partnerIncomes`, `dependentChildren`, `isSocialHousing`, `isFlatshare`, `isFurnished`, `studentStatus`, `isRoom`, `alimonyPaidLastYear`, `alimonyReceivedLastYear` | An estimate of the monthly housing benefit, the benefit's kind and zone, or `not_settled` where the estimate does not apply. |
 
 ### Lease, notice and deposit
 
@@ -60,6 +70,8 @@ All 27 tools are read-only. Their texts are in French, and each answer also come
 | `check_rent_guarantee_eligibility` | `address`, `commune`, `inseeCode`, `rentIncludingCharges`, `leaseType`, `applicants`, `gliIncomeMultiplier` | Whether one or two applicants can get Visale or a rent-guarantee insurance, with the reason for each. |
 | `list_required_lease_annexes` | `leaseType`, `isBuiltBefore1949`, `isInCoOwnership`, `isGasInstallationOver15Years`, `isElectricalInstallationOver15Years`, `isInRiskZone`, `isInAirportNoiseZone` | The diagnostics and documents to join to the lease, each with its reason. |
 | `calculate_deposit_cap` | `leaseType`, `monthlyRentExcludingCharges`, `isRentPaidInAdvanceOverTwoMonths`, `requestedDeposit` | The highest deposit a landlord may ask, and the excess of a deposit asked. |
+| `list_tenant_file_documents` | `activities`, `guarantorKind` | The documents a landlord may ask an applicant and a guarantor for, from the decree's list. |
+| `lookup_housing_contacts` | `address`, `commune`, `inseeCode` | The housing contacts of the town and its département, from service-public.fr's directory. |
 
 ### The dwelling and its address
 
@@ -70,6 +82,10 @@ All 27 tools are read-only. Their texts are in French, and each answer also come
 | `check_airport_noise_zone` | `address` | The noise zone (`A` to `D`), the airport and its plan, and whether a noise report is required. |
 | `check_abc_zone` | `address`, `commune`, `inseeCode` | The zone (`Abis`, `A`, `B1`, `B2`, `C`), the schemes it opens and the Loc'Avantages ceilings. |
 | `calculate_living_area` | `isInCoproperty`, `hasDecentSizeMainRoom`, `rooms`, `lease` | The living area room by room, the Carrez area in a co-ownership, and the gap with the area stated in the lease. |
+| `lookup_urban_plan_zone` | `address` | The zone of the local urban plan at the address, with its document on the Géoportail de l'urbanisme. |
+| `check_principal_residence_sector` | `address` | Whether the address sits in a sector the urban plan keeps for principal residences. |
+| `lookup_dpe` | `dpeNumber` | What ADEME publishes under a DPE number: class, consumption, emissions, dates and address, without its free-text fields. |
+| `lookup_local_tax_rates` | `address`, `commune`, `inseeCode` | The local tax rates of the town, from the Ministry of the Economy's open data. |
 
 ### Charges
 
@@ -190,11 +206,12 @@ Add a remote MCP server at `https://mcp.miramo.fr/mcp`, over Streamable HTTP, wi
 - In the French overseas collectivities other than Guadeloupe, Martinique, French Guiana, La Réunion and Mayotte, the tense zone, rent control perimeter and notice tools answer `not_settled`: Miramo has not checked the rules that apply there.
 - It gives general information from the official texts, not legal advice.
 - The lease tool prepares a draft and nothing more, and every calculation is an estimate from the figures given: the server signs nothing, sends nothing and touches no account.
-- Up to 60 tool calls a minute per IP address. Past that, the server answers `429` with `Retry-After`.
+- Up to 60 tool calls a minute per IP address, and 10 a minute for `calculate_housing_benefit`. Past that, the server answers `429` with `Retry-After`.
+- The housing benefit is an estimate, not a decision: only the Caf or the MSA decides.
 
 ## Privacy
 
-The server reads and never writes. No tool asks for a name, an email address or a phone number, and the server does not keep what it receives. Details, in French: section 3.7 of [Miramo's privacy policy](https://www.miramo.fr/politique-de-confidentialite#3-7).
+The server reads and never writes. It sends a public service only what its reading needs (an address to IGN's geocoder, a DPE number to ADEME, a town code to the tax and contact directories), never the caller's IP address. No tool asks for a name, an email address or a phone number, and the server does not keep what it receives. Details, in French: section 3.7 of [Miramo's privacy policy](https://www.miramo.fr/politique-de-confidentialite#3-7).
 
 ## Links
 

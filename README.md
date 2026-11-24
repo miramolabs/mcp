@@ -19,7 +19,7 @@ Transport: Streamable HTTP. Authentication: none.
 
 ## What it does
 
-- **Rent caps**: the reference rent at an address, with its upper and lower limits and the monthly cap for a given surface, under the prefectoral order in force today.
+- **Rent caps**: the reference rent at an address, with its upper and lower limits and, while a prefectoral order is in force, the monthly cap for a given surface.
 - **Rent control**: whether rents are capped at an address (Paris, Lyon, Lille, Bordeaux, Montpellier, Grenoble, the Basque Country, Plaine Commune, Est Ensemble), in the whole town or in part.
 - **Tense zone**: a town's category and what it changes: the tenant's notice, the rent rise between two tenants, the vacancy tax.
 - **ABC zone**: a town's zone and what it changes for the investment schemes: Loc'Avantages and its rent ceilings, intermediate housing, the zero-rate loan.
@@ -48,8 +48,8 @@ All 37 tools are read-only. Their texts are in French, and each answer also come
 
 | Tool | Input | Output |
 | --- | --- | --- |
-| `lookup_reference_rent` | `address`, `rooms`, `furnished`, `constructionPeriod`, `surface` | The reference rent, its upper and lower limits, the monthly cap, the order in force and its dates. |
-| `check_rent_control_perimeter` | `address`, `commune`, `inseeCode` | Whether rents are capped there (`full`, `partial`, `none`), the territory and its order, or `not_settled` where Miramo does not settle it. |
+| `lookup_reference_rent` | `address`, `rooms`, `furnished`, `constructionPeriod`, `propertyType`, `surface` | The reference rent and its upper and lower limits; while an order is in force, the monthly cap and the order with its dates; the rents of both zones (`boundaryZones`) for an address on the line between two zones. |
+| `check_rent_control_perimeter` | `address`, `commune`, `inseeCode` | Whether rents are capped there (`full`, `partial`, `none`), the territory and the order in force today when there is one, or `not_settled` where Miramo does not settle it. |
 | `calculate_prorated_rent` | `move`, `leaseType`, `monthlyRent`, `monthlyCharges`, `leaseStartDate`, `paymentTerm`, `exitReason`, `noticeEndDate`, `relocationMoveInDate`, `keyHandoverDate`, `leaseEndDate` | The rent and charges owed for the incomplete month of a move in or out. |
 | `check_rent_revision_freeze` | `dpeClass`, `leaseType`, `leaseEffectiveDate`, `address`, `commune`, `inseeCode` | Whether the rent of a dwelling rated F or G can still be revised, and since when. |
 | `calculate_reletting_rent_cap` | `leaseType`, `address`, `commune`, `inseeCode`, `dpeClass`, `hasTenantLeftWithin18Months`, `previousRent`, `previousRentLastRevisedOn`, `plannedRent`, `works`, `plannedSignatureOn` | The highest rent of a new lease when the dwelling changes tenant, the reason when there is no cap, and the excess of a planned rent. |
@@ -202,7 +202,10 @@ Add a remote MCP server at `https://mcp.miramo.fr/mcp`, over Streamable HTTP, wi
 
 ## Limits
 
-- France only. Where rents are capped but Miramo holds no official rent table (Grenoble, the Basque Country), the server names the order and gives no figure. For Lille, Bordeaux and Montpellier, `isStale` flags a rent table older than the order in force.
+- France only. Miramo holds no official rent table for Grenoble: the server gives no figure there. For Montpellier, `isStale` flags a rent table older than the latest order.
+- When no order is in force at an address on the day of the question, the answer says so: it keeps the figures of the last rent table, gives no monthly cap, and these figures are not a legal cap.
+- In Bordeaux and the Basque Country, the orders set different rents for a house and for a flat: without `propertyType` (`house` or `apartment`), `lookup_reference_rent` gives no rent there. In Bordeaux, Miramo holds the rent table for flats only: for a house, the answer gives no figure.
+- For a few Basque Country addresses on the line between two zones, the answer gives the rents of both zones and no single cap (`zone_boundary`), and points to annex 2 of the order.
 - In the French overseas collectivities other than Guadeloupe, Martinique, French Guiana, La Réunion and Mayotte, the tense zone, rent control perimeter and notice tools answer `not_settled`: Miramo has not checked the rules that apply there.
 - It gives general information from the official texts, not legal advice.
 - The lease tool prepares a draft and nothing more, and every calculation is an estimate from the figures given: the server signs nothing, sends nothing and touches no account.

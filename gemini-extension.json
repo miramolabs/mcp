@@ -1,6 +1,6 @@
 {
   "name": "miramo",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "French rental law and calculators for tenants and landlords: rent caps, notices, deposits, leases.",
   "mcpServers": {
     "miramo": {
